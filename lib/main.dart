@@ -1,5 +1,7 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 void main() {
   runApp(const MyApp());
@@ -19,7 +21,7 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         brightness: Brightness.light,
         colorScheme: const ColorScheme.light(
-          primary: Color(0xFF6C63FF), // ungu futuristik
+          primary: Color(0xFF6C63FF),
           secondary: Color(0xFF3A3D98),
           background: Color(0xFFF5F6FA),
         ),
@@ -48,13 +50,6 @@ class MyApp extends StatelessWidget {
           elevation: 0,
           foregroundColor: Color(0xFF222222),
           centerTitle: true,
-        ),
-        cardTheme: CardThemeData(
-          color: Colors.white,
-          elevation: 3,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
-          ),
         ),
       ),
       home: const LoginPage(),
@@ -110,7 +105,7 @@ class _LoginPageState extends State<LoginPage> {
             child: Padding(
               padding: const EdgeInsets.all(24.0),
               child: Container(
-                height: 420, // tinggi card dibatasi agar proporsional
+                height: 420,
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(20),
                   image: const DecorationImage(
@@ -129,7 +124,7 @@ class _LoginPageState extends State<LoginPage> {
                   borderRadius: BorderRadius.circular(20),
                   child: Container(
                     padding: const EdgeInsets.all(28),
-                    color: Colors.black.withOpacity(0.45), // overlay transparan
+                    color: Colors.black.withOpacity(0.45),
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
@@ -271,49 +266,37 @@ class DashboardPage extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 20),
-              Container(
-                margin: const EdgeInsets.only(bottom: 16),
-                decoration: BoxDecoration(
+              Center(
+                child: ClipRRect(
                   borderRadius: BorderRadius.circular(16),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.3),
-                      blurRadius: 15,
-                      offset: const Offset(0, 6),
-                    ),
-                  ],
-                ),
-                child: Center(
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(16),
-                    child: Image.asset(
-                      "assets/image/logo2.jpg",
-                      height: 140, // sedikit lebih besar agar proporsional
-                      width: 140,
-                      fit: BoxFit.cover,
-                    ),
+                  child: Image.asset(
+                    "assets/image/logo2.jpg",
+                    height: 140,
+                    width: 140,
+                    fit: BoxFit.cover,
                   ),
                 ),
               ),
+              const SizedBox(height: 30),
               Card(
                 color: Colors.white.withOpacity(0.15),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(16),
                 ),
-                child: ListTile(
-                  leading: const Icon(
+                child: const ListTile(
+                  leading: Icon(
                     Icons.dashboard_rounded,
                     color: Colors.white,
                     size: 32,
                   ),
-                  title: const Text(
+                  title: Text(
                     "Mini Project Flutter",
                     style: TextStyle(
                       fontFamily: 'Poppins',
                       color: Colors.white,
                     ),
                   ),
-                  subtitle: const Text(
+                  subtitle: Text(
                     "Sakituch we",
                     style: TextStyle(
                       fontFamily: 'Poppins',
@@ -325,11 +308,157 @@ class DashboardPage extends StatelessWidget {
               const Spacer(),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: const [
-                  Icon(Icons.home_outlined, size: 32, color: Colors.white),
-                  Icon(Icons.settings_outlined, size: 32, color: Colors.white),
-                  Icon(Icons.info_outline, size: 32, color: Colors.white),
+                children: [
+                  const Icon(
+                    Icons.home_outlined,
+                    size: 32,
+                    color: Colors.white,
+                  ),
+                  const Icon(
+                    Icons.settings_outlined,
+                    size: 32,
+                    color: Colors.white,
+                  ),
+                  GestureDetector(
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const InfoPage(),
+                        ),
+                      );
+                    },
+                    child: const Icon(
+                      Icons.info_outline,
+                      size: 32,
+                      color: Colors.white,
+                    ),
+                  ),
                 ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// =======================
+// INFO PAGE (CONTACT)
+// =======================
+class InfoPage extends StatelessWidget {
+  const InfoPage({super.key});
+
+  void _launchURL(String url) async {
+    final Uri uri = Uri.parse(url);
+    if (!await launchUrl(uri, mode: LaunchMode.externalApplication)) {
+      throw Exception('Tidak dapat membuka $url');
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text("Contact Person"),
+        backgroundColor: Colors.transparent,
+      ),
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            colors: [Color(0xFF6C63FF), Color(0xFF3A3D98)],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+        ),
+        child: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Text(
+                "Hubungi Saya di:",
+                style: TextStyle(
+                  fontFamily: 'Poppins',
+                  fontSize: 22,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.white,
+                ),
+              ),
+              const SizedBox(height: 40),
+
+              // 🔹 WhatsApp
+              GestureDetector(
+                onTap: () => _launchURL("https://wa.me/6281234567890"),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    SvgPicture.asset(
+                      "assets/icon/wa.svg",
+                      width: 40,
+                      height: 40,
+                    ),
+                    const SizedBox(width: 12),
+                    const Text(
+                      "Nomor WhatsApp kamu di sini",
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 16,
+                        fontFamily: 'Poppins',
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 24),
+
+              // 🔹 Instagram
+              GestureDetector(
+                onTap: () => _launchURL("https://instagram.com/usernamekamu"),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    SvgPicture.asset(
+                      "assets/icon/ig.svg",
+                      width: 40,
+                      height: 40,
+                    ),
+                    const SizedBox(width: 12),
+                    const Text(
+                      "@usernamekamu",
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 16,
+                        fontFamily: 'Poppins',
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 24),
+
+              // 🔹 GitHub
+              GestureDetector(
+                onTap: () => _launchURL("https://github.com/usernamekamu"),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    SvgPicture.asset(
+                      "assets/icon/git.svg",
+                      width: 40,
+                      height: 40,
+                    ),
+                    const SizedBox(width: 12),
+                    const Text(
+                      "github.com/usernamekamu",
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 16,
+                        fontFamily: 'Poppins',
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ],
           ),
