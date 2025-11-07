@@ -8,51 +8,60 @@ void main() {
 }
 
 // =======================
-// APP ROOT
+// APP ROOT (STATEFUL)
 // =======================
-class MyApp extends StatelessWidget {
+class MyApp extends StatefulWidget {
   const MyApp({super.key});
 
   @override
+  State<MyApp> createState() => _MyAppState();
+}
+
+class _MyAppState extends State<MyApp> {
+  bool _isDarkMode = false;
+
+  void _toggleTheme(bool value) {
+    setState(() {
+      _isDarkMode = value;
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final ThemeData lightTheme = ThemeData(
+      brightness: Brightness.light,
+      colorScheme: const ColorScheme.light(
+        primary: Color(0xFF6C63FF),
+        secondary: Color(0xFF3A3D98),
+        background: Color(0xFFF5F6FA),
+      ),
+      scaffoldBackgroundColor: const Color(0xFFF5F6FA),
+      useMaterial3: true,
+      textTheme: const TextTheme(
+        bodyMedium: TextStyle(fontFamily: 'Poppins', color: Color(0xFF222222)),
+      ),
+    );
+
+    final ThemeData darkTheme = ThemeData(
+      brightness: Brightness.dark,
+      colorScheme: const ColorScheme.dark(
+        primary: Color(0xFF121212),
+        secondary: Color(0xFF1E1E1E),
+        background: Color(0xFF000000),
+      ),
+      scaffoldBackgroundColor: const Color(0xFF000000),
+      useMaterial3: true,
+      textTheme: const TextTheme(
+        bodyMedium: TextStyle(fontFamily: 'Poppins', color: Colors.white),
+      ),
+      cardColor: const Color(0xFF1E1E1E),
+    );
+
     return MaterialApp(
       title: 'Mini Project Login',
       debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        brightness: Brightness.light,
-        colorScheme: const ColorScheme.light(
-          primary: Color(0xFF6C63FF),
-          secondary: Color(0xFF3A3D98),
-          background: Color(0xFFF5F6FA),
-        ),
-        scaffoldBackgroundColor: const Color(0xFFF5F6FA),
-        useMaterial3: true,
-        textTheme: const TextTheme(
-          bodyMedium: TextStyle(
-            fontFamily: 'Poppins',
-            color: Color(0xFF222222),
-          ),
-          bodyLarge: TextStyle(fontFamily: 'Poppins', color: Color(0xFF222222)),
-        ),
-        elevatedButtonTheme: ElevatedButtonThemeData(
-          style: ElevatedButton.styleFrom(
-            backgroundColor: const Color(0xFF6C63FF),
-            foregroundColor: Colors.white,
-            elevation: 6,
-            shadowColor: const Color(0xFF6C63FF).withOpacity(0.3),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(14),
-            ),
-          ),
-        ),
-        appBarTheme: const AppBarTheme(
-          backgroundColor: Colors.transparent,
-          elevation: 0,
-          foregroundColor: Color(0xFF222222),
-          centerTitle: true,
-        ),
-      ),
-      home: const LoginPage(),
+      theme: _isDarkMode ? darkTheme : lightTheme,
+      home: LoginPage(onToggleTheme: _toggleTheme, isDarkMode: _isDarkMode),
     );
   }
 }
@@ -61,7 +70,14 @@ class MyApp extends StatelessWidget {
 // LOGIN PAGE
 // =======================
 class LoginPage extends StatefulWidget {
-  const LoginPage({super.key});
+  final Function(bool) onToggleTheme;
+  final bool isDarkMode;
+
+  const LoginPage({
+    super.key,
+    required this.onToggleTheme,
+    required this.isDarkMode,
+  });
 
   @override
   State<LoginPage> createState() => _LoginPageState();
@@ -78,7 +94,13 @@ class _LoginPageState extends State<LoginPage> {
     if (user == "admin" && pass == "123") {
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (context) => DashboardPage(username: user)),
+        MaterialPageRoute(
+          builder: (context) => DashboardPage(
+            username: user,
+            onToggleTheme: widget.onToggleTheme,
+            isDarkMode: widget.isDarkMode,
+          ),
+        ),
       );
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -90,11 +112,15 @@ class _LoginPageState extends State<LoginPage> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
     return Scaffold(
       body: Container(
-        decoration: const BoxDecoration(
+        decoration: BoxDecoration(
           gradient: LinearGradient(
-            colors: [Color(0xFF6C63FF), Color(0xFF3A3D98)],
+            colors: isDark
+                ? [Colors.black, Colors.grey.shade900]
+                : [theme.colorScheme.primary, theme.colorScheme.secondary],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
@@ -108,10 +134,13 @@ class _LoginPageState extends State<LoginPage> {
                 height: 420,
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(20),
-                  image: const DecorationImage(
-                    image: AssetImage("assets/image/logo2.jpg"),
-                    fit: BoxFit.cover,
-                  ),
+                  image: isDark
+                      ? null
+                      : const DecorationImage(
+                          image: AssetImage("assets/image/logo2.jpg"),
+                          fit: BoxFit.cover,
+                        ),
+                  color: isDark ? Colors.grey[900] : null,
                   boxShadow: [
                     BoxShadow(
                       color: Colors.black.withOpacity(0.25),
@@ -124,7 +153,9 @@ class _LoginPageState extends State<LoginPage> {
                   borderRadius: BorderRadius.circular(20),
                   child: Container(
                     padding: const EdgeInsets.all(28),
-                    color: Colors.black.withOpacity(0.45),
+                    color: isDark
+                        ? Colors.black.withOpacity(0.7)
+                        : Colors.black.withOpacity(0.45),
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
@@ -153,25 +184,11 @@ class _LoginPageState extends State<LoginPage> {
                               color: Colors.white,
                             ),
                             labelText: "Username",
-                            labelStyle: const TextStyle(
-                              color: Colors.white70,
-                              fontSize: 14,
-                            ),
+                            labelStyle: const TextStyle(color: Colors.white70),
                             filled: true,
                             fillColor: Colors.white.withOpacity(0.1),
-                            enabledBorder: OutlineInputBorder(
+                            border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(12),
-                              borderSide: const BorderSide(
-                                color: Colors.white54,
-                                width: 1,
-                              ),
-                            ),
-                            focusedBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
-                              borderSide: const BorderSide(
-                                color: Colors.white,
-                                width: 1.4,
-                              ),
                             ),
                           ),
                         ),
@@ -186,32 +203,21 @@ class _LoginPageState extends State<LoginPage> {
                               color: Colors.white,
                             ),
                             labelText: "Password",
-                            labelStyle: const TextStyle(
-                              color: Colors.white70,
-                              fontSize: 14,
-                            ),
+                            labelStyle: const TextStyle(color: Colors.white70),
                             filled: true,
                             fillColor: Colors.white.withOpacity(0.1),
-                            enabledBorder: OutlineInputBorder(
+                            border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(12),
-                              borderSide: const BorderSide(
-                                color: Colors.white54,
-                                width: 1,
-                              ),
-                            ),
-                            focusedBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
-                              borderSide: const BorderSide(
-                                color: Colors.white,
-                                width: 1.4,
-                              ),
                             ),
                           ),
                         ),
                         const SizedBox(height: 24),
                         ElevatedButton(
                           onPressed: _login,
-                          style: theme.elevatedButtonTheme.style,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: theme.colorScheme.secondary,
+                            foregroundColor: Colors.white,
+                          ),
                           child: const Text("LOGIN"),
                         ),
                       ],
@@ -232,11 +238,21 @@ class _LoginPageState extends State<LoginPage> {
 // =======================
 class DashboardPage extends StatelessWidget {
   final String username;
+  final Function(bool) onToggleTheme;
+  final bool isDarkMode;
 
-  const DashboardPage({super.key, required this.username});
+  const DashboardPage({
+    super.key,
+    required this.username,
+    required this.onToggleTheme,
+    required this.isDarkMode,
+  });
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
     return Scaffold(
       extendBodyBehindAppBar: true,
       appBar: AppBar(
@@ -244,9 +260,11 @@ class DashboardPage extends StatelessWidget {
         backgroundColor: Colors.transparent,
       ),
       body: Container(
-        decoration: const BoxDecoration(
+        decoration: BoxDecoration(
           gradient: LinearGradient(
-            colors: [Color(0xFF6C63FF), Color(0xFF3A3D98)],
+            colors: isDark
+                ? [Colors.black, Colors.grey.shade900]
+                : [theme.colorScheme.primary, theme.colorScheme.secondary],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
@@ -278,12 +296,9 @@ class DashboardPage extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 30),
-              Card(
-                color: Colors.white.withOpacity(0.15),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                child: const ListTile(
+              const Card(
+                color: Colors.transparent,
+                child: ListTile(
                   leading: Icon(
                     Icons.dashboard_rounded,
                     color: Colors.white,
@@ -291,17 +306,11 @@ class DashboardPage extends StatelessWidget {
                   ),
                   title: Text(
                     "Mini Project Flutter",
-                    style: TextStyle(
-                      fontFamily: 'Poppins',
-                      color: Colors.white,
-                    ),
+                    style: TextStyle(color: Colors.white),
                   ),
                   subtitle: Text(
                     "Sakituch we",
-                    style: TextStyle(
-                      fontFamily: 'Poppins',
-                      color: Colors.white70,
-                    ),
+                    style: TextStyle(color: Colors.white70),
                   ),
                 ),
               ),
@@ -314,18 +323,29 @@ class DashboardPage extends StatelessWidget {
                     size: 32,
                     color: Colors.white,
                   ),
-                  const Icon(
-                    Icons.settings_outlined,
-                    size: 32,
-                    color: Colors.white,
-                  ),
                   GestureDetector(
                     onTap: () {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (context) => const InfoPage(),
+                          builder: (context) => SettingsPage(
+                            onToggleTheme: onToggleTheme,
+                            isDarkMode: isDarkMode,
+                          ),
                         ),
+                      );
+                    },
+                    child: const Icon(
+                      Icons.settings_outlined,
+                      size: 32,
+                      color: Colors.white,
+                    ),
+                  ),
+                  GestureDetector(
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (_) => const InfoPage()),
                       );
                     },
                     child: const Icon(
@@ -345,7 +365,81 @@ class DashboardPage extends StatelessWidget {
 }
 
 // =======================
-// INFO PAGE (CONTACT)
+// SETTINGS PAGE
+// =======================
+class SettingsPage extends StatefulWidget {
+  final Function(bool) onToggleTheme;
+  final bool isDarkMode;
+
+  const SettingsPage({
+    super.key,
+    required this.onToggleTheme,
+    required this.isDarkMode,
+  });
+
+  @override
+  State<SettingsPage> createState() => _SettingsPageState();
+}
+
+class _SettingsPageState extends State<SettingsPage> {
+  late bool _switchValue;
+
+  @override
+  void initState() {
+    super.initState();
+    _switchValue = widget.isDarkMode;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
+    return Scaffold(
+      appBar: AppBar(title: const Text("Settings")),
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: isDark
+                ? [Colors.black, Colors.grey.shade900]
+                : [theme.colorScheme.primary, theme.colorScheme.secondary],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+        ),
+        child: Center(
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Text(
+                "Dark Mode",
+                style: TextStyle(
+                  fontSize: 18,
+                  fontFamily: 'Poppins',
+                  color: Colors.white,
+                ),
+              ),
+              const SizedBox(width: 10),
+              Switch(
+                value: _switchValue,
+                onChanged: (value) {
+                  setState(() {
+                    _switchValue = value;
+                  });
+                  widget.onToggleTheme(value);
+                },
+                activeColor: Colors.deepPurpleAccent,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// =======================
+// INFO PAGE
 // =======================
 class InfoPage extends StatelessWidget {
   const InfoPage({super.key});
@@ -359,15 +453,17 @@ class InfoPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
     return Scaffold(
-      appBar: AppBar(
-        title: const Text("Contact Person"),
-        backgroundColor: Colors.transparent,
-      ),
+      appBar: AppBar(title: const Text("Contact Person")),
       body: Container(
-        decoration: const BoxDecoration(
+        decoration: BoxDecoration(
           gradient: LinearGradient(
-            colors: [Color(0xFF6C63FF), Color(0xFF3A3D98)],
+            colors: isDark
+                ? [Colors.black, Colors.grey.shade900]
+                : [theme.colorScheme.primary, theme.colorScheme.secondary],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
@@ -381,80 +477,102 @@ class InfoPage extends StatelessWidget {
                 style: TextStyle(
                   fontFamily: 'Poppins',
                   fontSize: 22,
-                  fontWeight: FontWeight.w600,
                   color: Colors.white,
                 ),
               ),
               const SizedBox(height: 40),
 
-              // 🔹 WhatsApp
+              // ====================
+              // WhatsApp
+              // ====================
               GestureDetector(
-                onTap: () => _launchURL("https://wa.me/6281234567890"),
+                onTap: () => _launchURL("https://wa.me/6285284065425"),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     SvgPicture.asset(
-                      "assets/icon/wa.svg",
+                      "assets/icons/wa.svg",
                       width: 40,
                       height: 40,
+                      colorFilter: const ColorFilter.mode(
+                        Colors.white,
+                        BlendMode.srcIn,
+                      ),
                     ),
                     const SizedBox(width: 12),
                     const Text(
-                      "Nomor WhatsApp kamu di sini",
+                      "085284065425",
                       style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 16,
                         fontFamily: 'Poppins',
+                        fontSize: 18,
+                        fontWeight: FontWeight.w500,
+                        color: Colors.white,
                       ),
                     ),
                   ],
                 ),
               ),
-              const SizedBox(height: 24),
 
-              // 🔹 Instagram
+              const SizedBox(height: 20),
+
+              // ====================
+              // Instagram
+              // ====================
               GestureDetector(
-                onTap: () => _launchURL("https://instagram.com/usernamekamu"),
+                onTap: () => _launchURL("https://instagram.com/anifburhan"),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     SvgPicture.asset(
-                      "assets/icon/ig.svg",
+                      "assets/icons/ig.svg",
                       width: 40,
                       height: 40,
+                      colorFilter: const ColorFilter.mode(
+                        Colors.white,
+                        BlendMode.srcIn,
+                      ),
                     ),
                     const SizedBox(width: 12),
                     const Text(
-                      "@usernamekamu",
+                      "anifburhan",
                       style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 16,
                         fontFamily: 'Poppins',
+                        fontSize: 18,
+                        fontWeight: FontWeight.w500,
+                        color: Colors.white,
                       ),
                     ),
                   ],
                 ),
               ),
-              const SizedBox(height: 24),
 
-              // 🔹 GitHub
+              const SizedBox(height: 20),
+
+              // ====================
+              // GitHub
+              // ====================
               GestureDetector(
-                onTap: () => _launchURL("https://github.com/usernamekamu"),
+                onTap: () => _launchURL("https://github.com/anifburhan"),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     SvgPicture.asset(
-                      "assets/icon/git.svg",
+                      "assets/icons/git.svg",
                       width: 40,
                       height: 40,
+                      colorFilter: const ColorFilter.mode(
+                        Colors.white,
+                        BlendMode.srcIn,
+                      ),
                     ),
                     const SizedBox(width: 12),
                     const Text(
-                      "github.com/usernamekamu",
+                      "anifburhan",
                       style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 16,
                         fontFamily: 'Poppins',
+                        fontSize: 18,
+                        fontWeight: FontWeight.w500,
+                        color: Colors.white,
                       ),
                     ),
                   ],
