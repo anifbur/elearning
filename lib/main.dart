@@ -552,7 +552,7 @@ class InfoPage extends StatelessWidget {
               // GitHub
               // ====================
               GestureDetector(
-                onTap: () => _launchURL("https://github.com/anifburhan"),
+                onTap: () => _launchURL("https://github.com/anifbur"),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
@@ -567,7 +567,7 @@ class InfoPage extends StatelessWidget {
                     ),
                     const SizedBox(width: 12),
                     const Text(
-                      "anifburhan",
+                      "anifbur",
                       style: TextStyle(
                         fontFamily: 'Poppins',
                         fontSize: 18,
